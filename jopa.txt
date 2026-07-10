@@ -1,0 +1,231 @@
+local Players = game:Service("Players")
+local UserInputService = game:Service("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Переменные для настроек
+local hitboxSize = 2
+local espEnabled = false
+local toggleKey = Enum.KeyCode.K -- Кнопка для ПК
+
+-- Создание UI (Красивый темный дизайн)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CheatPanel"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 300, 0, 250)
+MainFrame.Position = UDim2.new(0.5, -150, 0.4, -125)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true -- Можно перетаскивать по экрану
+MainFrame.Parent = ScreenGui
+
+-- Скругление углов главной панели
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = MainFrame
+
+-- Заголовок панели
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+Title.Text = "  FUN CHEAT PANEL  "
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Center
+Title.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 10)
+TitleCorner.Parent = Title
+
+--- --- --- КНОПКА ДЛЯ МОБИЛЬНЫХ (ОТКРЫТЬ/ЗАКРЫТЬ) --- --- ---
+
+local MobileToggleButton = Instance.new("TextButton")
+MobileToggleButton.Name = "MobileToggle"
+MobileToggleButton.Size = UDim2.new(0, 50, 0, 50)
+-- Размещаем в левой части экрана, чуть ниже стандартных кнопок Роблокса
+MobileToggleButton.Position = UDim2.new(0, 15, 0, 120) 
+MobileToggleButton.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+MobileToggleButton.Text = "⚙️" -- Стильная иконка шестеренки
+MobileToggleButton.TextSize = 24
+MobileToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MobileToggleButton.Parent = ScreenGui
+
+local MobileCorner = Instance.new("UICorner")
+MobileCorner.CornerRadius = UDim.new(1, 0) -- Делаем кнопку идеально круглой
+MobileCorner.Parent = MobileToggleButton
+
+-- Небольшая обводка для мобильной кнопки
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(0, 150, 100)
+UIStroke.Thickness = 2
+UIStroke.Parent = MobileToggleButton
+
+--- --- --- ФУНКЦИОНАЛ ХИТБОКСОВ --- --- ---
+
+local HitboxLabel = Instance.new("TextLabel")
+HitboxLabel.Size = UDim2.new(1, -40, 0, 30)
+HitboxLabel.Position = UDim2.new(0, 20, 0, 60)
+HitboxLabel.BackgroundTransparency = 1
+HitboxLabel.Text = "Размер хитбокса (Head): " .. hitboxSize
+HitboxLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+HitboxLabel.Font = Enum.Font.Gotham
+HitboxLabel.TextSize = 14
+HitboxLabel.TextXAlignment = Enum.TextXAlignment.Left
+HitboxLabel.Parent = MainFrame
+
+local IncreaseHitbox = Instance.new("TextButton")
+IncreaseHitbox.Size = UDim2.new(0, 120, 0, 35)
+IncreaseHitbox.Position = UDim2.new(0, 20, 0, 95)
+IncreaseHitbox.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+IncreaseHitbox.Text = "Увеличить (+2)"
+IncreaseHitbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+IncreaseHitbox.Font = Enum.Font.GothamBold
+IncreaseHitbox.TextSize = 14
+IncreaseHitbox.Parent = MainFrame
+
+local ResetHitbox = Instance.new("TextButton")
+ResetHitbox.Size = UDim2.new(0, 120, 0, 35)
+ResetHitbox.Position = UDim2.new(0, 160, 0, 95)
+ResetHitbox.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+ResetHitbox.Text = "Сбросить"
+ResetHitbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+ResetHitbox.Font = Enum.Font.GothamBold
+ResetHitbox.TextSize = 14
+ResetHitbox.Parent = MainFrame
+
+local c1 = Instance.new("UICorner") c1.CornerRadius = UDim.new(0, 6) c1.Parent = IncreaseHitbox
+local c2 = Instance.new("UICorner") c2.CornerRadius = UDim.new(0, 6) c2.Parent = ResetHitbox
+
+--- --- --- ФУНКЦИОНАЛ ВХ (ESP) --- --- ---
+
+local EspButton = Instance.new("TextButton")
+EspButton.Size = UDim2.new(1, -40, 0, 45)
+EspButton.Position = UDim2.new(0, 20, 0, 160)
+EspButton.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+EspButton.Text = "ВХ: ВЫКЛ"
+EspButton.TextColor3 = Color3.fromRGB(255, 50, 50)
+EspButton.Font = Enum.Font.GothamBold
+EspButton.TextSize = 16
+EspButton.Parent = MainFrame
+
+local c3 = Instance.new("UICorner") c3.CornerRadius = UDim.new(0, 6) c3.Parent = EspButton
+
+-- Подсказка внизу
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Size = UDim2.new(1, 0, 0, 20)
+InfoLabel.Position = UDim2.new(0, 0, 1, -25)
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Text = "Нажми [ K ] или на кнопку ⚙️"
+InfoLabel.TextColor3 = Color3.fromRGB(100, 100, 110)
+InfoLabel.Font = Enum.Font.GothamItalic
+InfoLabel.TextSize = 12
+InfoLabel.Parent = MainFrame
+
+--- --- --- ЛОГИКА СКРИПТА --- --- ---
+
+-- Функция переключения видимости панели
+local function toggleMenu()
+	MainFrame.Visible = not MainFrame.Visible
+end
+
+-- 1. Открытие по кнопке на клавиатуре (для ПК)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == toggleKey then
+		toggleMenu()
+	end
+end)
+
+-- 2. Открытие по тапу на круглую кнопку (для мобилок и ПК)
+MobileToggleButton.MouseButton1Click:Connect(function()
+	toggleMenu()
+end)
+
+-- Проверка устройства: если это ПК, то круглую кнопку можно оставить или скрыть. 
+-- Оставим её активной для всех, так как это удобная альтернатива кликанью клавиатуры.
+
+-- Функция обновления хитбоксов
+local function updateHitboxes()
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character then
+			local head = player.Character:FindFirstChild("Head")
+			if head and head:IsA("BasePart") then
+				head.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+				head.CanCollide = false
+				head.Transparency = 0.5
+			end
+		end
+	end
+end
+
+-- Цикл для ВХ и Хитбоксов
+task.spawn(function()
+	while true do
+		task.wait(0.5)
+		updateHitboxes()
+		
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer and player.Character then
+				local highlight = player.Character:FindFirstChild("ESPHighlight")
+				
+				if espEnabled then
+					if not highlight then
+						highlight = Instance.new("Highlight")
+						highlight.Name = "ESPHighlight"
+						highlight.FillColor = Color3.fromRGB(255, 0, 0)
+						highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+						highlight.FillTransparency = 0.5
+						highlight.Parent = player.Character
+					end
+				else
+					if highlight then
+						highlight:Destroy()
+					end
+				end
+			end
+		end
+	end
+end)
+
+-- Логика кнопок внутри меню
+IncreaseHitbox.MouseButton1Click:Connect(function()
+	hitboxSize = hitboxSize + 2
+	if hitboxSize > 10 then hitboxSize = 10 end
+	HitboxLabel.Text = "Размер хитбокса (Head): " .. hitboxSize
+	updateHitboxes()
+end)
+
+ResetHitbox.MouseButton1Click:Connect(function()
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character then
+			local head = player.Character:FindFirstChild("Head")
+			if head then
+				head.Size = Vector3.new(2, 1, 1)
+				head.Transparency = 0
+			end
+		end
+	end
+	hitboxSize = 2
+	HitboxLabel.Text = "Размер хитбокса (Head): " .. hitboxSize
+end)
+
+EspButton.MouseButton1Click:Connect(function()
+	espEnabled = not espEnabled
+	if espEnabled then
+		EspButton.Text = "ВХ: ВКЛ"
+		EspButton.TextColor3 = Color3.fromRGB(50, 255, 50)
+	else
+		EspButton.Text = "ВХ: ВЫКЛ"
+		EspButton.TextColor3 = Color3.fromRGB(255, 50, 50)
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player.Character and player.Character:FindFirstChild("ESPHighlight") then
+				player.Character.ESPHighlight:Destroy()
+			end
+		end
+	end
+end)
