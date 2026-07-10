@@ -1,17 +1,28 @@
-local pg = game:GetService("Players").LocalPlayer:FindFirstChildOfClass("PlayerGui")
-if pg then
-    if pg:FindFirstChild("ModPanel") then pg.ModPanel:Destroy() end
+-- Безопасный выбор папки интерфейса (CoreGui для Xeno на ПК, PlayerGui для мобилок)
+local TargetParent = nil
+local success, coregui = pcall(function() return game:GetService("CoreGui") end)
+
+if success and coregui and not game:GetService("UserInputService").TouchEnabled then
+    TargetParent = coregui
+else
+    TargetParent = game:GetService("Players").LocalPlayer:FindFirstChildOfClass("PlayerGui")
+end
+
+if TargetParent then
+    if TargetParent:FindFirstChild("ModPanel") then TargetParent.ModPanel:Destroy() end
 
     local size = 2
     local esp = false
     local plrs = game:GetService("Players")
     local lp = plrs.LocalPlayer
+    local uis = game:GetService("UserInputService")
+    local toggleKey = Enum.KeyCode.K -- Бинд для ноутов
 
-    local s = Instance.new("ScreenGui", pg) s.Name = "ModPanel" s.ResetOnSpawn = false
+    local s = Instance.new("ScreenGui", TargetParent) s.Name = "ModPanel" s.ResetOnSpawn = false
     local f = Instance.new("Frame", s) f.Size = UDim2.new(0, 260, 0, 200) f.Position = UDim2.new(0.5, -130, 0.3, 0) f.BackgroundColor3 = Color3.fromRGB(25, 25, 30) f.BorderSizePixel = 0
     Instance.new("UICorner", f).CornerRadius = UDim.new(0, 10)
 
-    local t = Instance.new("TextLabel", f) t.Size = UDim2.new(1, 0, 0, 40) t.BackgroundColor3 = Color3.fromRGB(35, 35, 45) t.Text = "CHEAT PANEL v2" t.TextColor3 = Color3.fromRGB(255, 255, 255) t.Font = Enum.Font.SourceSansBold t.TextSize = 18
+    local t = Instance.new("TextLabel", f) t.Size = UDim2.new(1, 0, 0, 40) t.BackgroundColor3 = Color3.fromRGB(35, 35, 45) t.Text = "CROSSPLATFORM PANEL" t.TextColor3 = Color3.fromRGB(255, 255, 255) t.Font = Enum.Font.SourceSansBold t.TextSize = 16
     Instance.new("UICorner", t).CornerRadius = UDim.new(0, 10)
 
     local l = Instance.new("TextLabel", f) l.Size = UDim2.new(1, 0, 0, 30) l.Position = UDim2.new(0, 0, 0, 50) l.BackgroundTransparency = 1 l.Text = "Размер хитбокса: 2" l.TextColor3 = Color3.fromRGB(200, 200, 200) l.Font = Enum.Font.SourceSansBold l.TextSize = 16
@@ -25,12 +36,27 @@ if pg then
     local b3 = Instance.new("TextButton", f) b3.Size = UDim2.new(1, -30, 0, 40) b3.Position = UDim2.new(0, 15, 0, 135) b3.BackgroundColor3 = Color3.fromRGB(50, 50, 60) b3.Text = "ВХ: ВЫКЛ" b3.TextColor3 = Color3.fromRGB(255, 50, 50) b3.Font = Enum.Font.SourceSansBold b3.TextSize = 16
     Instance.new("UICorner", b3).CornerRadius = UDim.new(0, 6)
 
+    -- Круглая кнопка (отображается везде для удобства)
     local tog = Instance.new("TextButton", s) tog.Size = UDim2.new(0, 45, 0, 45) tog.Position = UDim2.new(0, 15, 0, 140) tog.BackgroundColor3 = Color3.fromRGB(35, 35, 45) tog.Text = "⚙️" tog.TextSize = 20 tog.TextColor3 = Color3.fromRGB(255, 255, 255)
     Instance.new("UICorner", tog).CornerRadius = UDim.new(1, 0)
     local ts = Instance.new("UIStroke", tog) ts.Color = Color3.fromRGB(0, 150, 100) ts.Thickness = 2
 
-    tog.MouseButton1Click:Connect(function() f.Visible = not f.Visible end)
+    -- Логика переключения видимости
+    local function toggleMenu()
+        f.Visible = not f.Visible
+    end
 
+    tog.MouseButton1Click:Connect(toggleMenu)
+
+    -- Бинд кнопки [K] для Xeno на ноутбуках
+    uis.InputBegan:Connect(function(input, processed)
+        if processed then return end
+        if input.KeyCode == toggleKey then
+            toggleMenu()
+        end
+    end)
+
+    -- Универсальный Драг (Мышь + Тач)
     local drag, start, startPos
     f.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -38,14 +64,14 @@ if pg then
             input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then drag = false end end)
         end
     end)
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
+    uis.InputChanged:Connect(function(input)
         if drag and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) then
             local delta = input.Position - start
             f.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 
-    -- ФУНКЦИЯ ХИТБОКСА (Исправленная физика)
+    -- Функции читов
     local function applyHitboxes()
         for _, p in ipairs(plrs:GetPlayers()) do
             if p ~= lp and p.Character then
@@ -53,14 +79,13 @@ if pg then
                 if h and h:IsA("BasePart") then
                     h.Size = Vector3.new(size, size, size)
                     h.CanCollide = false
-                    h.Massless = true -- Чтобы враги не застывали
+                    h.Massless = true
                     h.Transparency = 0.6
                 end
             end
         end
     end
 
-    -- ОПТИМИЗИРОВАННЫЙ ЦИКЛ БЕЗ ДЕРГАНИЙ
     task.spawn(function()
         while task.wait(0.3) do
             pcall(function()
@@ -70,7 +95,6 @@ if pg then
                     if p ~= lp and p.Character then
                         local hi = p.Character:FindFirstChild("ExESP")
                         if esp then
-                            -- Вместо удаления создаем только если его НЕТ (фикс дергания)
                             if not hi then
                                 hi = Instance.new("Highlight", p.Character)
                                 hi.Name = "ExESP"
@@ -110,7 +134,6 @@ if pg then
             b3.Text = "ВХ: ВКЛ" b3.TextColor3 = Color3.fromRGB(50, 255, 50)
         else
             b3.Text = "ВХ: ВЫКЛ" b3.TextColor3 = Color3.fromRGB(255, 50, 50)
-            -- Быстрая очистка при выключении
             for _, p in ipairs(plrs:GetPlayers()) do
                 if p.Character and p.Character:FindFirstChild("ExESP") then p.Character.ExESP:Destroy() end
             end
